@@ -116,7 +116,7 @@
       color: #991b1b;
     }
 
-    /* القائمة المخفية بشكل دائم */
+    /* القائمة المخفية */
     .hidden-list {
       display: none !important;
     }
@@ -142,12 +142,21 @@
     <!-- منطقة الرسائل والتنبيهات -->
     <div id="alertBox" class="alert"></div>
 
-    <!-- القائمة المخفية لتخزين الأسماء -->
+    <!-- القائمة المخفية لتخزين الأسماء محلياً -->
     <ul id="hiddenCustomerList" class="hidden-list"></ul>
   </div>
 
   <!-- ----- البرمجة والتفاعل (JavaScript) ----- -->
   <script>
+    // 1. مصفوفة الأسماء المشتركة والمحفوظة مباشرة داخل الكود
+    // يمكنك إضافة أو تعديل الأسماء هنا ليراها الفريق بعد الـ git push & pull
+    const defaultCustomers = [
+      "أحمد علي",
+      "محمد حسن",
+      "سارة محمود",
+      "مركز الدعم الرقمي"
+    ];
+
     // جلب العناصر من الـ DOM
     const customerInput = document.getElementById('customerName');
     const addBtn = document.getElementById('addBtn');
@@ -155,7 +164,6 @@
     const hiddenList = document.getElementById('hiddenCustomerList');
     const alertBox = document.getElementById('alertBox');
 
-    // المفتاح المستخدم للتخزين في LocalStorage
     const STORAGE_KEY = 'customers_list';
 
     // دالة لعرض التنبيهات
@@ -165,14 +173,14 @@
       alertBox.style.display = 'block';
     }
 
-    // دالة لحفظ القائمة الحالية من الـ DOM إلى LocalStorage
+    // حفظ الأسماء المضافة حديثاً في LocalStorage الجهاز المحلي
     function saveToLocalStorage() {
       const listItems = Array.from(hiddenList.querySelectorAll('li'));
       const names = listItems.map(item => item.textContent.trim());
       localStorage.setItem(STORAGE_KEY, JSON.stringify(names));
     }
 
-    // دالة لتحميل الأسماء المخزنة من LocalStorage عند فتح/تحديث الصفحة
+    // تحميل الأسماء المخزنة محلياً عند تشغيل الصفحة
     function loadFromLocalStorage() {
       const storedNames = localStorage.getItem(STORAGE_KEY);
       if (storedNames) {
@@ -185,7 +193,7 @@
       }
     }
 
-    // 1. إضافة عميل جديد
+    // زر إضافة عميل جديد
     addBtn.addEventListener('click', () => {
       const name = customerInput.value.trim();
 
@@ -194,21 +202,20 @@
         return;
       }
 
-      // إنشاء عنصر <li> وتخزينه في القائمة المخفية
+      // إضافة الاسم للـ DOM المحلي
       const li = document.createElement('li');
       li.textContent = name;
       hiddenList.appendChild(li);
 
-      // تحديث البيانات في LocalStorage
+      // حفظ التحديث محلياً
       saveToLocalStorage();
 
-      // إظهار رسالة تأكيد وإعادة ضبط حقل الإدخال
-      showAlert(`تمت إضافة العميل "${name}" وحفظه بنجاح.`, 'success');
+      showAlert(`تمت إضافة العميل "${name}" محلياً.`, 'success');
       customerInput.value = '';
       customerInput.focus();
     });
 
-    // 2. البحث عن عميل
+    // زر البحث عن عميل
     searchBtn.addEventListener('click', () => {
       const query = customerInput.value.trim().toLowerCase();
 
@@ -217,18 +224,22 @@
         return;
       }
 
-      // جلب العناصر المخزنة في القائمة المخفية بالـ DOM
-      const listItems = Array.from(hiddenList.querySelectorAll('li'));
-      const found = listItems.some(item => item.textContent.trim().toLowerCase() === query);
+      // أ) البحث في قائمة الأسماء المكتوبة داخل الكود
+      const foundInCode = defaultCustomers.some(name => name.trim().toLowerCase() === query);
 
-      if (found) {
+      // ب) البحث في الأسماء المضافة محلياً على المتصفح
+      const listItems = Array.from(hiddenList.querySelectorAll('li'));
+      const foundInLocal = listItems.some(item => item.textContent.trim().toLowerCase() === query);
+
+      // النتيجة
+      if (foundInCode || foundInLocal) {
         showAlert(`العميل "${customerInput.value.trim()}" موجود في القائمة!`, 'success');
       } else {
         showAlert(`عذراً، الاسم "${customerInput.value.trim()}" غير موجود.`, 'error');
       }
     });
 
-    // استرجاع القائمة فور تحميل الصفحة
+    // تحميل المحفوظات عند فتح الصفحة
     document.addEventListener('DOMContentLoaded', loadFromLocalStorage);
   </script>
 </body>
